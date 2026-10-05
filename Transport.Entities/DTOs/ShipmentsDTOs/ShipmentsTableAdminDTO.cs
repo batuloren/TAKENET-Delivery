@@ -27,6 +27,10 @@ namespace Transport.Entities.DTOs.ShipmentsDTOs
 
         public Guid? statusId { get; set; }
 
+        public Guid? DriverId { get; set; }
+
+        public Guid? VehicleId { get; set; }
+
         public int StatusCode { get; set; }
 
         public string? StatusDurum { get; set; }
@@ -42,6 +46,7 @@ namespace Transport.Entities.DTOs.ShipmentsDTOs
         public string? Description { get; set; }
 
         public string? FeedbackDescription { get; set; }
+
 
     }
 }

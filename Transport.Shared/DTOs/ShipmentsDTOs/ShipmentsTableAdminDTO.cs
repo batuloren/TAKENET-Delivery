@@ -24,6 +24,10 @@ namespace Transport.Shared.DTOs.ShipmentsDTOs
 
         public string? DriverFullName { get; set; }
 
+        public Guid? DriverId { get; set; }
+       
+        public Guid? VehicleId { get; set; }
+
         public Guid? statusId { get; set; }
 
         public int StatusCode { get; set; }

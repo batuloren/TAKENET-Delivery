@@ -1,0 +1,159 @@
+/* ========================================================
+   TAKE NET ADMIN PANEL - RESPONSIVE (MOBIL UYUMLULUK) CSS
+   ======================================================== */
+
+@media (max-width: 992px) {
+    /* 1. ANA DÜZEN (LAYOUT) MOBİLDE DİKEY AKIŞ */
+    .admin-layout {
+        flex-direction: column !important;
+        height: auto !important;
+        min-height: 100vh !important;
+        overflow-x: hidden !important;
+    }
+
+    /* 2. SIDEBAR MOBİLDE YATAY KAYDIRILABİLİR MENÜ */
+    .admin-sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        height: auto !important;
+        padding: 10px 15px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        z-index: 100;
+    }
+
+    .admin-sidebar .sidebar-logo {
+        display: none !important; /* Mobilde topbar'daki logo yeterli */
+    }
+
+    .admin-sidebar .nav-label {
+        display: none !important;
+    }
+
+    .admin-sidebar .sidebar-nav {
+        display: flex !important;
+        flex-direction: row !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        gap: 8px !important;
+        padding-bottom: 5px !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    .admin-sidebar .nav-item {
+        display: inline-flex !important;
+        align-items: center !important;
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        border-radius: 20px !important;
+        background: rgba(255, 255, 255, 0.05);
+        flex-shrink: 0 !important;
+    }
+
+    /* 3. TOPBAR DÜZENİ */
+    .admin-topbar {
+        padding: 8px 15px !important;
+        height: auto !important;
+        min-height: 56px !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+    }
+
+    /* Kayan yazıyı mobilde küçült ve sığdır */
+    .ticker-container {
+        order: 3 !important;
+        width: 100% !important;
+        margin: 4px 0 0 0 !important;
+        height: 22px !important;
+    }
+
+    .ticker-text {
+        font-size: 0.8rem !important;
+    }
+
+    .topbar-right {
+        gap: 8px !important;
+    }
+
+    .topbar-right .text-muted {
+        display: none !important; /* Mobilde tarihi gizle yer kalsın */
+    }
+
+    .logout-full-image {
+        height: 48px !important; /* Mobilde çıkış butonunu orantılı yap */
+    }
+
+    /* 4. DASHBOARD İSTATİSTİK KARTLARI */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .stat-card {
+        padding: 12px !important;
+    }
+
+    .stat-value {
+        font-size: 18px !important;
+    }
+
+    .stat-icon {
+        font-size: 16px !important;
+        right: 10px !important;
+        top: 10px !important;
+    }
+
+    /* 5. TABLOLAR MOBİLDE YATAY KAYDIRMA */
+    .admin-content {
+        padding: 12px 10px !important;
+        overflow-x: hidden !important;
+    }
+
+    .card {
+        padding: 12px !important;
+        overflow: hidden !important;
+    }
+
+    /* Tablo içeren alanlar taşmasın, parmakla sağa-sola kaysın */
+    table {
+        display: block !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        font-size: 13px !important;
+        white-space: nowrap !important;
+    }
+
+    table th, table td {
+        padding: 8px 10px !important;
+    }
+
+    /* 6. BUTONLAR VE FİLTRE ARAMALARI */
+    .d-flex.justify-content-between,
+    .page-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+    }
+
+    .page-header h1 {
+        font-size: 1.25rem !important;
+    }
+}
+
+/* Küçük telefonlar (iPhone, Android dikey mod) */
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+    }
+
+    .take-net-logo {
+        font-size: 1rem !important;
+    }
+
+    .take-net-logo .take,
+    .take-net-logo .net {
+        padding: 3px 6px !important;
+    }
+}

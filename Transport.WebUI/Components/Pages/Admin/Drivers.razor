@@ -37,6 +37,7 @@
                         <th>EMAIL</th>
                         <th>AD SOYAD</th>
                         <th>TELEFON</th>
+                        <th>DURUM</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,6 +48,16 @@
                             <td>@item.FullName</td>
                             <td>@item.Email</td>
                             <td>@item.Telefon</td>
+                            <td>
+                                @if (item.AktifMi == true)
+                                {
+                                    <span class="badge badge-green">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-red">Pasif</span>
+                                }
+                            </td>
 
                             <td>
                                 <button @onclick="() => OpenEdit(item)">Düzenle</button>

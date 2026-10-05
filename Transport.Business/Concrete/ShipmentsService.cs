@@ -33,6 +33,8 @@ namespace Transport.Business.Concrete
                         CustomerFullName = x.Customer != null ? x.Customer.FullName : "—",
                         VehiclePlateNumber = x.Vehicle != null ? x.Vehicle.PlakaNumara : "—",
                         DriverFullName = x.Driver != null ? x.Driver.FullName : "—",
+                        DriverId = x.DriverId,
+                        VehicleId = x.VehicleId,
 
                         StatusCode = x.StatusCode,
                         StatusDurum = x.Status != null ? x.Status.Durum : "—",

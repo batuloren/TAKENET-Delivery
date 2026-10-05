@@ -12,7 +12,6 @@ namespace Transport.Shared.DTOs.ShipmentsDTOs
         public Guid? DriverId { get; set; }
         public Guid? VehicleId { get; set; }
         public int StatusCode { get; set; }
-
         public decimal Agirlik { get; set; }
         public bool AktifMi { get; set; }
         public string? FeedbackDescription { get; set; }

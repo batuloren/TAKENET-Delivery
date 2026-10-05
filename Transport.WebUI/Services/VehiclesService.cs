@@ -30,5 +30,9 @@ namespace Transport.WebUI.Services
         public Task<GetVehiclesByPlateNumberResponse> GetByPlateNumber(GetVehiclesByPlateNumberRequest req) =>
         _api.PostAsync<GetVehiclesByPlateNumberRequest, GetVehiclesByPlateNumberResponse>("api/Vehicles/GetByPlateNumber", req);
 
+        internal object GetByIdAsync(object vehicleId)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

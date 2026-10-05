@@ -493,12 +493,6 @@
     background: #dbeafe;
     color: #1e40af;
 }
-
-.badge-red {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
 .badge-gray {
     background: #f3f4f6;
     color: #6b7280;
@@ -1084,4 +1078,17 @@
     align-items:center;
     justify-content:center;
     gap:8px;
+}
+
+.badge-red {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 7px 12px;
+    border-bottom: 0.5px solid #f0f0ee;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+    vertical-align: middle;
+    font-size: 12px;
 }

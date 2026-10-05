@@ -131,9 +131,9 @@
                                                         -- Seçiniz --
                                                     </option>
 
-                                                    @foreach (var d in driverOptions)
+                                                    @foreach (var d in driverOptions.Where(x => x.AktifMi == true))
                                                     {
-                                                        <option value="@d.Id">
+                                                        <option value="@d.Id" selected ="@(editDto.DriverId == d.Id)">
                                                             @d.FullName
                                                         </option>
                                                     }
@@ -152,9 +152,9 @@
                                                         -- Seçiniz --
                                                     </option>
 
-                                                    @foreach (var v in vehicleOptions)
+                                                    @foreach (var v in vehicleOptions.Where(x => x.AktifMi == true))
                                                     {
-                                                        <option value="@v.Id">
+                                                        <option value="@v.Id" selected = "@(editDto.VehicleId == v.Id)">
                                                             @v.PlakaNumara - @v.AracModel
                                                         </option>
                                                     }
@@ -665,9 +665,10 @@ private void OpenEdit(ShipmentsTableAdminDTO item)
         Agirlik = item.Agirlik ?? 0,
         AktifMi = item.AktifMi,
         FeedbackDescription = item.FeedbackDescription,
-        DriverId = null,
-        VehicleId = null
+        DriverId = item.DriverId,
+        VehicleId = item.VehicleId
     };
+
     editError = null;
 }
 
