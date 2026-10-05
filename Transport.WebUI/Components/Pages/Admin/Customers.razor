@@ -1,0 +1,370 @@
+﻿@page "/admin/customers"
+@using Transport.Shared.DTOs.CustomersDTOs
+@using Transport.Shared.Models.Customers
+@rendermode InteractiveServer
+@layout AdminLayout
+
+@inject CustomersService CustomersService
+
+<div class="page-header">
+    <div>
+        <h1>Müşteriler</h1>
+        <p>Müşteri yönetimi</p>
+    </div>
+</div>
+
+<div class="tab-bar">
+
+    <button class="tab-btn @(activeTab == "all" ? "active" : "")"
+            @onclick='() => SetTab("all")'>
+        <i class="ti ti-list"></i>
+        Tüm Müşteriler
+    </button>
+
+    <button class="tab-btn @(activeTab == "id" ? "active" : "")"
+            @onclick='() => SetTab("id")'>
+        <i class="ti ti-hash"></i>
+        ID
+    </button>
+
+    <button class="tab-btn @(activeTab == "email" ? "active" : "")"
+            @onclick='() => SetTab("email")'>
+        <i class="ti ti-mail"></i>
+        Email
+    </button>
+
+    <button class="tab-btn @(activeTab == "phone" ? "active" : "")"
+            @onclick='() => SetTab("phone")'>
+        <i class="ti ti-phone"></i>
+        Telefon
+    </button>
+
+    <button class="tab-btn @(activeTab == "name" ? "active" : "")"
+            @onclick='() => SetTab("name")'>
+        <i class="ti ti-user"></i>
+        Ad Soyad
+    </button>
+
+</div>
+
+@if (activeTab == "all")
+{
+    @if (isLoading)
+    {
+        <div class="table-loading">
+            <i class="ti ti-loader"></i>
+            Yükleniyor...
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Ad Soyad</th>
+                        <th>Email</th>
+                        <th>Telefon</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in allCustomers)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.FullName</td>
+                            <td>@item.Email</td>
+                            <td>@item.Telefon</td>
+                            <td>
+                                @if (item.AktifMi == true)
+                                {
+                                    <span class="badge badge-green">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-red">Pasif</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@if (activeTab == "id")
+{
+    <div class="search-panel">
+        <div class="search-panel-row">
+
+            <div class="search-box">
+                <i class="ti ti-hash"></i>
+                <input type="text" placeholder="ID giriniz" @bind="query" />
+            </div>
+
+            <button class="btn-primary" @onclick="SearchById" disabled="@loading">
+                @if (loading)
+                {
+                    <i class="ti ti-loader"></i>
+                }
+                else
+                {
+
+                    <i class="ti ti-search"></i>
+                }
+                Ara
+            </button>
+
+        </div>
+
+        @if (idResult != null)
+        {
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <td>@idResult.Ad @idResult.Soyad</td>
+                        <td>@idResult.Email</td>
+                        <td>@idResult.Telefon</td>
+                        <td>@(idResult.AktifMi == true ? "Aktif" : "Pasif")</td>
+                    </tr>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@if (activeTab == "email")
+{
+    <div class="search-panel">
+        <div class="search-panel-row">
+
+            <div class="search-box">
+                <i class="ti ti-mail"></i>
+                <input type="text" placeholder="Email giriniz" @bind="query" />
+            </div>
+
+            <button class="btn-primary" @onclick="SearchByEmail" disabled="@loading">
+                @if (loading)
+                {
+                    <i class="ti ti-loader"></i>
+                }
+                else
+                {
+
+                    <i class="ti ti-search"></i>
+                }
+                Ara
+            </button>
+
+        </div>
+
+        @if (emailResult != null)
+        {
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <td>@emailResult.Ad @emailResult.Soyad</td>
+                        <td>@emailResult.Telefon</td>
+                    </tr>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@if (activeTab == "phone")
+{
+    <div class="search-panel">
+        <div class="search-panel-row">
+
+            <div class="search-box">
+                <i class="ti ti-phone"></i>
+                <input type="text" placeholder="Telefon giriniz" @bind="query" />
+            </div>
+
+            <button class="btn-primary" @onclick="SearchByPhone" disabled="@loading">
+                @if (loading)
+                {
+                    <i class="ti ti-loader"></i>
+                }
+                else
+                {
+
+                    <i class="ti ti-search"></i>
+                }
+                Ara
+            </button>
+
+        </div>
+
+        @if (phoneResult != null)
+        {
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ad Soyad</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        
+                            <tr>
+                                <td>@phoneResult.Ad @phoneResult.Soyad</td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@if (activeTab == "name")
+{
+    <div class="search-panel">
+        <div class="search-panel-row">
+
+            <div class="search-box">
+                <i class="ti ti-user"></i>
+                <input type="text" placeholder="Ad Soyad giriniz" @bind="query" />
+            </div>
+
+            <button class="btn-primary" @onclick="SearchByName" disabled="@loading">
+                @if (loading)
+                {
+                    <i class="ti ti-loader"></i>
+                }
+                else
+                {
+
+                    <i class="ti ti-search"></i>
+                }
+                Ara
+            </button>
+
+        </div>
+
+        @if (nameResults?.Any() == true)
+        {
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Telefon</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in nameResults)
+                        {
+                            <tr>
+                                <td>@item.Telefon</td>
+                                <td>@item.Email</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    private string activeTab = "all";
+
+    private bool isLoading = true;
+    private bool loading = false;
+
+    private string query = "";
+
+    private List<CustomersListItem> allCustomers = new();
+
+    private GetCustomersByIdResponse? idResult;
+    private GetCustomersByEmailResponse? emailResult;
+    private GetCustomersByPhoneResponse? phoneResult;
+    private List<GetCustomersByFullNameResponse>? nameResults;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var res = await CustomersService.GetAllAsync();
+
+            if (res.IsSuccess && res.data != null)
+                allCustomers = res.data.ToList();
+        }
+        catch { }
+
+        isLoading = false;
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+        query = "";
+        idResult = null;
+        emailResult = null;
+        phoneResult = null;
+        nameResults = null;
+    }
+
+    private async Task SearchById()
+    {
+        loading = true;
+        idResult = null;
+
+        try
+        {
+            if (Guid.TryParse(query, out var id))
+            {
+                var res = await CustomersService.GetByIdAsync(new GetCustomersByIdRequest { Id = id });
+                idResult = res;
+            }
+        }
+        finally { loading = false; }
+    }
+
+    private async Task SearchByEmail()
+    {
+        loading = true;
+        emailResult = null;
+
+        try
+        {
+            var res = await CustomersService.GetByEmailAsync(new GetCustomersByEmailRequest { Email = query });
+            emailResult = res;
+        }
+        finally { loading = false; }
+    }
+
+    private async Task SearchByPhone()
+    {
+        loading = true;
+        phoneResult = null;
+
+        try
+        {
+            var res = await CustomersService.GetByPhone(new GetCustomersByPhoneRequest { Telefon = query });
+            phoneResult = res;
+        }
+        finally { loading = false; }
+    }
+
+    private async Task SearchByName()
+    {
+        loading = true;
+        nameResults = null;
+
+        try
+        {
+            nameResults = await CustomersService.GetByFullName(new GetCustomersByFullNameRequest { FullName = query });
+        }
+        finally { loading = false; }
+    }
+}

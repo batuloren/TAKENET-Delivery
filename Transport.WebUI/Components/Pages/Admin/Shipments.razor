@@ -1,0 +1,731 @@
+﻿@page "/admin/shipments"
+@rendermode InteractiveServer
+@layout AdminLayout
+
+@inject ShipmentsService ShipmentsService
+@inject NavigationManager Nav
+@inject StatusesService StatusesService
+@inject DriversService DriversService
+@inject VehiclesService VehiclesService
+
+
+<div class="page-header">
+    <div>
+        <h1>Kargolar</h1>
+        <p>Kargo yönetimi</p>
+    </div>
+</div>
+
+<div class="tab-bar">
+    <button class="tab-btn @(activeTab == "all" ? "active" : "")"
+            @onclick='() => SetTab("all")'>
+        <i class="ti ti-list"></i>
+        Genel Tablo
+    </button>
+
+    <button class="tab-btn @(activeTab == "email" ? "active" : "")"
+            @onclick='() => SetTab("email")'>
+        <i class="ti ti-mail"></i>
+        E-posta ile Ara
+    </button>
+
+    <button class="tab-btn @(activeTab == "id" ? "active" : "")"
+            @onclick='() => SetTab("id")'>
+        <i class="ti ti-hash"></i>
+        ID ile Ara
+    </button>
+</div>
+
+@if (activeTab == "all")
+{
+    <div class="toolbar">
+
+        <div class="search-box">
+            <i class="ti ti-search"></i>
+
+            <input type="text"
+                   placeholder="Takip no, müşteri, adres..."
+                   @bind="searchTerm"
+                   @bind:event="oninput" />
+        </div>
+
+        <select class="filter-select" @bind="selectedStatus">
+            <option value="">Tüm Statüler</option>
+
+            @foreach (var s in statusList)
+            {
+                <option value="@s">@s</option>
+            }
+        </select>
+
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="table-loading">
+            <i class="ti ti-loader"></i>
+            Yükleniyor...
+        </div>
+    }
+    else
+    {
+        <div class="table-wrap">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Takip No</th>
+                        <th>Müşteri</th>
+                        <th>Sürücü</th>
+                        <th>Araç</th>
+                        <th>Yükleme</th>
+                        <th>Teslimat</th>
+                        <th>Ağırlık</th>
+                        <th>Statü</th>
+                        <th>Tarih</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    @foreach (var item in pagedShipments)
+                    {
+                        @if (editingId == item.id)
+                        {
+                            <tr class="editing-row">
+
+                                <td colspan="9">
+
+                                    <div class="inline-edit">
+
+                                        <div class="inline-edit-grid">
+
+                                            <div class="form-group">
+                                                <label>Statü</label>
+
+                                                <select @bind="editDto!.StatusCode">
+
+                                                    <option value="0">
+                                                        -- Seçiniz --
+                                                    </option>
+
+                                                    @foreach (var s in statusOptions)
+                                                    {
+                                                        <option value="@s.StatusCode">
+                                                            @s.Durum (@s.StatusCode)
+                                                        </option>
+                                                    }
+
+                                                </select>
+                                            </div>
+
+                                            <div class="form-group">
+
+                                                <label>Sürücü</label>
+
+                                                <select @onchange="OnDriverChanged">
+
+                                                    <option value="">
+                                                        -- Seçiniz --
+                                                    </option>
+
+                                                    @foreach (var d in driverOptions)
+                                                    {
+                                                        <option value="@d.Id">
+                                                            @d.FullName
+                                                        </option>
+                                                    }
+
+                                                </select>
+
+                                            </div>
+
+                                            <div class="form-group">
+
+                                                <label>Araç</label>
+
+                                                <select @onchange="OnVehicleChanged">
+
+                                                    <option value="">
+                                                        -- Seçiniz --
+                                                    </option>
+
+                                                    @foreach (var v in vehicleOptions)
+                                                    {
+                                                        <option value="@v.Id">
+                                                            @v.PlakaNumara - @v.AracModel
+                                                        </option>
+                                                    }
+
+                                                </select>
+
+                                            </div>
+
+                                            <div class="form-group">
+
+                                                <label>Ağırlık (kg)</label>
+
+                                                <input type="number"
+                                                       step="0.1"
+                                                       @bind="editDto!.Agirlik" />
+
+                                            </div>
+
+                                            <div class="form-group">
+
+                                                <label>Geri Bildirim</label>
+
+                                                <input type="text"
+                                                       @bind="editDto!.FeedbackDescription" />
+
+                                            </div>
+
+                                            <div class="form-group">
+
+                                                <label>&nbsp;</label>
+
+                                                <div style="display:flex;
+                                                            gap:8px;
+                                                            align-items:center;
+                                                            padding-top:4px">
+
+                                                    <input type="checkbox"
+                                                           id="aktif_@item.id"
+                                                           @bind="editDto!.AktifMi" />
+
+                                                    <label for="aktif_@item.id"
+                                                           style="text-transform:none;
+                                                                  font-size:13px;
+                                                                  color:#374151;
+                                                                  font-weight:500">
+
+                                                        Aktif
+                                                    </label>
+
+                                                </div>
+
+                                            </div>
+
+                                        </div>
+
+                                        @if (editError != null)
+                                        {
+                                            <div class="alert-error">
+                                                @editError
+                                            </div>
+                                        }
+
+                                        <div class="inline-edit-actions">
+
+                                            <button class="btn-secondary"
+                                                    @onclick="CancelEdit">
+
+                                                İptal
+                                            </button>
+
+                                            <button class="btn-primary"
+                                                    @onclick="SubmitEdit"
+                                                    disabled="@editLoading">
+
+                                                @if (editLoading)
+                                                {
+                                                    <i class="ti ti-loader"></i>
+                                                }
+
+                                                Kaydet
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+                                <td></td>
+
+                            </tr>
+                        }
+                        else if (confirmDeleteId == item.id)
+                        {
+                            <tr class="deleting-row">
+
+                                <td>
+                                    <span class="track-id">
+                                        @item.trackId
+                                    </span>
+                                </td>
+
+                                <td colspan="8">
+
+                                    <span style="color:#A32D2D;font-weight:500;border-right-width:0px">
+                                        <i class="ti ti-alert-triangle"></i>
+                                        Bu kargoyu silmek istediğinize emin misiniz?
+                                    </span>
+
+                                    @if (deleteError != null)
+                                    {
+                                        <span style="margin-left:12px;
+                                                     color:#A32D2D;
+                                                     font-size:12px">
+
+                                            @deleteError
+                                        </span>
+                                    }
+
+                                </td>
+
+                                <td>
+
+                                    <div class="row-actions">
+
+                                        <button class="btn-secondary"
+                                                style="padding:5px 12px;font-size:12px"
+                                                @onclick="CancelDelete">
+
+                                            İptal
+                                        </button>
+
+                                        <button class="btn-danger"
+                                                style="padding:5px 12px;font-size:12px"
+                                                @onclick="() => SubmitDelete(item.id)"
+                                                disabled="@deleteLoading">
+
+                                            @if (deleteLoading)
+                                            {
+                                                <i class="ti ti-loader"></i>
+                                            }
+
+                                            Sil
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+                        else
+                        {
+                            <tr>
+
+                                <td style="padding: 11px 8px;">
+                                    <span class="track-id">
+                                        @item.trackId
+                                    </span>
+                                </td>
+
+                                <td style="padding: 11px 8px;">@item.CustomerFullName</td>
+
+                                <td style="padding: 11px 8px;">
+                                    @(item.DriverFullName ?? "—")
+                                </td>
+
+                                <td style="padding: 11px 8px;">
+                                    @(item.VehiclePlateNumber ?? "—")
+                                </td>
+
+                                <td style="padding: 11px 8px;">@item.LoadAddress</td>
+
+                                <td style="padding: 11px 8px;">@item.DeliveryAddress</td>
+
+                                <td style="padding: 11px 8px;">
+                                    @(item.Agirlik?.ToString("F1") ?? "—") kg
+                                </td>
+
+                                <td style="padding: 11px 8px;">
+                                    <span class="badge @GetStatusBadge(item.StatusDurum)">
+                                        @item.StatusDurum
+                                    </span>
+                                </td> 
+
+                                <td>
+                                    @item.ShipmentDate?.ToString("dd.MM.yyyy")
+                                </td>
+
+                                <td style="padding: 11px 8px;">
+
+                                    <div class="row-actions">
+
+                                        <button class="action-btn edit"
+                                                title="Düzenle"
+                                                @onclick="() => OpenEdit(item)">
+
+                                            <i class="ti ti-edit"></i>
+                                            Düzenle
+                                        </button>
+
+                                        <button class="action-btn delete"
+                                                title="Sil"
+                                                @onclick="() => confirmDeleteId = item.id">
+                                                Sil
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        }
+                    }
+
+                </tbody>
+
+            </table>
+
+            <div class="pagination">
+
+                <span>
+                    @((currentPage - 1) * pageSize + 1)
+                    –
+                    @Math.Min(currentPage * pageSize, filteredShipments.Count)
+                    /
+                    @filteredShipments.Count kayıt
+                </span>
+
+                <div class="page-btns">
+
+                    <button class="page-btn"
+                            @onclick="PrevPage"
+                            disabled="@(currentPage == 1)">
+
+                        <i class="ti ti-chevron-left"></i>
+                    </button>
+
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        var p = i;
+
+                        <button class="page-btn @(p == currentPage ? "active" : "")"
+                                @onclick="() => currentPage = p">
+
+                            @p
+                        </button>
+                    }
+
+                    <button class="page-btn"
+                            @onclick="NextPage"
+                            disabled="@(currentPage == totalPages)">
+
+                        <i class="ti ti-chevron-right"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+}
+
+@* ===== EMAIL İLE ARA ===== *@
+@if (activeTab == "email")
+{
+    <div class="search-panel">
+        <div class="search-panel-row">
+            <div class="search-box">
+                <i class="ti ti-mail"></i>
+                <input type="email" placeholder="musteri@email.com" @bind="emailQuery" />
+            </div>
+            <button class="btn-primary" @onclick="SearchByEmail" disabled="@emailLoading">
+                @if (emailLoading) { <i class="ti ti-loader"></i> } else { <i class="ti ti-search"></i> }
+                Ara
+            </button>
+        </div>
+        @if (emailError != null)
+        {
+            <div class="alert-error">@emailError</div>
+        }
+        @if (emailResponse != null)
+        {
+            <div class="result-info">
+                <span><i class="ti ti-user"></i> @emailResponse.CustomerName</span>
+                <span><i class="ti ti-mail"></i> @emailResponse.CustomerEmailAddress</span>
+                <span class="result-count">@emailResponse.Shipments.Count kargo</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Takip No</th>
+                            <th>Yükleme</th>
+                            <th>Teslimat</th>
+                            <th>Ağırlık</th>
+                            <th>Statü</th>
+                            <th>Tarih</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in emailResponse.Shipments)
+                        {
+                            <tr>
+                                <td><span class="track-id">@item.trackId</span></td>
+                                <td>@item.LoadAddress</td>
+                                <td>@item.DeliveryAddress</td>
+                                <td>@(item.Agirlik?.ToString("F1") ?? "—") kg</td>
+                                <td><span class="badge @GetStatusBadge(item.StatusDurum)">@item.StatusDurum</span></td>
+                                <td>@item.ShipmentDate?.ToString("dd.MM.yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@* ===== ID İLE ARA ===== *@
+@if (activeTab == "id")
+{
+    <div class="search-panel">
+        <div class="search-panel-row">
+            <div class="search-box">
+                <i class="ti ti-hash"></i>
+                <input type="text" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" @bind="idQuery" />
+            </div>
+            <button class="btn-primary" @onclick="SearchById" disabled="@idLoading">
+                @if (idLoading) { <i class="ti ti-loader"></i> } else { <i class="ti ti-search"></i> }
+                Ara
+            </button>
+        </div>
+        @if (idError != null)
+        {
+            <div class="alert-error">@idError</div>
+        }
+        @if (idResult != null)
+        {
+            <div class="detail-card">
+                <div class="detail-row"><span>Takip No</span><span class="track-id">@idResult.trackId</span></div>
+                <div class="detail-row"><span>Müşteri</span><span>@idResult.CustomerFullName</span></div>
+                <div class="detail-row"><span>E-posta</span><span>@idResult.CustomerEmailAddress</span></div>
+                <div class="detail-row"><span>Telefon</span><span>@idResult.CustomerTelephoneNumber</span></div>
+                <div class="detail-row"><span>Sürücü</span><span>@(idResult.DriverFullName ?? "—")</span></div>
+                <div class="detail-row"><span>Araç</span><span>@(idResult.VehiclePlateNumber ?? "—")</span></div>
+                <div class="detail-row"><span>Yükleme</span><span>@idResult.LoadAddress</span></div>
+                <div class="detail-row"><span>Teslimat</span><span>@idResult.DeliveryAddress</span></div>
+                <div class="detail-row"><span>Ağırlık</span><span>@(idResult.Agirlik?.ToString("F1")) kg</span></div>
+                <div class="detail-row"><span>Statü</span><span> @GetStatusBadge(idResult.StatusDurum)">@idResult.StatusDurum</span></div>
+                <div class="detail-row"><span>Tarih</span><span>@idResult.ShipmentDate?.ToString("dd.MM.yyyy")</span></div>
+                @if (idResult.Description != null)
+                {
+                    <div class="detail-row"><span>Açıklama</span><span>@idResult.Description</span></div>
+                }
+                @if (idResult.FeedbackDescription != null)
+                {
+                    <div class="detail-row"><span>Geri Bildirim</span><span>@idResult.FeedbackDescription</span></div>
+                }
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+private List<StatusesListItem> statusOptions = new();
+private List<DriversListItem> driverOptions = new();
+private List<VehiclesListItem> vehicleOptions = new();
+
+    private string activeTab = "all";
+    private List<ShipmentsTableAdminDTO> allShipments = new();
+    private bool isLoading = true;
+    private string searchTerm = "";
+    private string selectedStatus = "";
+    private int currentPage = 1;
+    private int pageSize = 10;
+
+    // Email ara
+    private string emailQuery = "";
+    private bool emailLoading = false;
+    private string? emailError;
+    private GetShipmentsByCustomerEmailResponse? emailResponse;
+
+    // ID ara
+    private string idQuery = "";
+    private bool idLoading = false;
+    private string? idError;
+    private ShipmentsList_ADMIN_Item? idResult;
+    private Guid? confirmDeleteId;
+private bool deleteLoading = false;
+private string? deleteError;
+    // Inline edit
+    private Guid? editingId;
+    private ShipmentsUpdateDTO? editDto;
+    private bool editLoading = false;
+    private string? editError;
+
+    private List<string> statusList => allShipments
+        .Where(x => x.StatusDurum != null)
+        .Select(x => x.StatusDurum!)
+        .Distinct().ToList();
+
+    private List<ShipmentsTableAdminDTO> filteredShipments => allShipments
+        .Where(x =>
+            (string.IsNullOrEmpty(searchTerm) ||
+             x.trackId.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             (x.CustomerFullName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+             x.LoadAddress.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             x.DeliveryAddress.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(selectedStatus) || x.StatusDurum == selectedStatus)
+        ).ToList();
+
+    private int totalPages => Math.Max(1, (int)Math.Ceiling(filteredShipments.Count / (double)pageSize));
+    private List<ShipmentsTableAdminDTO> pagedShipments =>
+        filteredShipments.Skip((currentPage - 1) * pageSize).Take(pageSize).ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+try
+    {
+        allShipments = await ShipmentsService.GetAllShipmentsAsync();
+    }
+    catch (Exception ex) { Console.WriteLine("Shipments hata: " + ex.Message); }
+
+    try
+    {
+        var statuses = await StatusesService.GetAll();
+        statusOptions = statuses.data?.ToList() ?? new();
+    }
+    catch (Exception ex) { Console.WriteLine("Statuses hata: " + ex.Message); }
+
+    try
+    {
+        var drivers = await DriversService.GetAllAsync();
+        driverOptions = drivers.data?.ToList() ?? new();
+    }
+    catch (Exception ex) { Console.WriteLine("Drivers hata: " + ex.Message); }
+
+    try
+    {
+        var vehicles = await VehiclesService.GetAllAsync();
+        vehicleOptions = vehicles.data?.ToList() ?? new();
+    }
+    catch (Exception ex) { Console.WriteLine("Vehicles hata: " + ex.Message); }
+
+    isLoading = false;
+    }
+    private void OnDriverChanged(ChangeEventArgs e)
+{
+    if (editDto == null) return;
+    var val = e.Value?.ToString();
+    editDto.DriverId = Guid.TryParse(val, out var id) ? id : null;
+}
+
+private void OnVehicleChanged(ChangeEventArgs e)
+{
+    if (editDto == null) return;
+    var val = e.Value?.ToString();
+    editDto.VehicleId = Guid.TryParse(val, out var id) ? id : null;
+}
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+        currentPage = 1;
+        emailResponse = null;
+        idResult = null;
+        emailError = null;
+        idError = null;
+        CancelEdit();
+        CancelDelete();
+    }
+
+    private async Task SearchByEmail()
+    {
+        emailLoading = true; emailError = null; emailResponse = null;
+        try
+        {
+            emailResponse = await ShipmentsService.GetByCustomerEmailAsync(
+                new GetShipmentsByCustomerEmailRequest { CustomerEmail = emailQuery });
+        }
+        catch { emailError = "Sonuç bulunamadı veya hata oluştu."; }
+        finally { emailLoading = false; }
+    }
+
+    private async Task SearchById()
+    {
+        if (!Guid.TryParse(idQuery, out var guid))
+        {
+            idError = "Geçerli bir ID giriniz."; return;
+        }
+        idLoading = true; idError = null; idResult = null;
+        try { idResult = await ShipmentsService.GetByIdAsync(guid); }
+        catch { idError = "Kargo bulunamadı."; }
+        finally { idLoading = false; }
+    }
+
+private void OpenEdit(ShipmentsTableAdminDTO item)
+{
+    editingId = item.id;
+    confirmDeleteId = null;
+    editDto = new ShipmentsUpdateDTO
+    {
+        Id = item.id,
+        StatusCode = item.StatusCode,
+        Agirlik = item.Agirlik ?? 0,
+        AktifMi = item.AktifMi,
+        FeedbackDescription = item.FeedbackDescription,
+        DriverId = null,
+        VehicleId = null
+    };
+    editError = null;
+}
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        editDto = null;
+        editError = null;
+    }
+
+   private async Task SubmitEdit()
+{
+    if (editDto == null) return;
+    editLoading = true;
+    editError = null;
+    try
+    {
+        await ShipmentsService.UpdateAsync(editDto);
+        allShipments = await ShipmentsService.GetAllShipmentsAsync();
+        CancelEdit();
+    }
+    catch (Exception ex)
+    {
+        editError = ex.Message;
+    }
+    finally
+    {
+        editLoading = false;
+    }
+}
+
+    private void CancelDelete()
+    {
+        confirmDeleteId = null;
+        deleteError = null;
+    }
+
+    private async Task SubmitDelete(Guid id)
+    {
+        deleteLoading = true; deleteError = null;
+        try
+        {
+            await ShipmentsService.DeleteAsync(id);
+            allShipments = allShipments.Where(x => x.id != id).ToList();
+            CancelDelete();
+        }
+        catch (Exception ex) { deleteError = ex.Message; }
+        finally { deleteLoading = false; }
+    }
+
+    private void PrevPage() { if (currentPage > 1) currentPage--; }
+    private void NextPage() { if (currentPage < totalPages) currentPage++; }
+
+    private string GetStatusBadge(string? status) => status switch
+    {
+        "Yolda" => "badge-amber",
+        "Hazırlanıyor" => "badge-blue",
+        "İptal" => "badge-red",
+        _ => "badge-gray"
+    };
+}

@@ -1,0 +1,134 @@
+﻿@inherits LayoutComponentBase
+
+<div class="admin-layout">
+    <AdminSidebar />
+    <div class="admin-main">
+        
+        <!-- YENİ TOPBAR DÜZENİ -->
+        <div class="admin-topbar" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 20px;">
+            
+            <!-- SOL KISIM: Logo ve Sayfa Başlığı -->
+            <div class="topbar-left" style="display: flex; align-items: center; gap: 20px;">
+                <!-- TAKE NET Logo -->
+                <a class="text-decoration-none" href="/admin">
+                    <div class="take-net-logo">
+                        <span class="take">TAKE</span><span class="net">NET</span>
+                    </div>
+                </a>
+                
+                <!-- Sayfa Başlığı -->
+                <span class="topbar-title fw-bold" style="font-size: 1.1rem;">@PageTitle</span>
+            </div>
+
+            <!-- ORTA KISIM: Kayan Yazı (Ticker) -->
+            <div class="ticker-container">
+                <div class="ticker-text">
+                    DİKKAT! Kullanıcıların 'Güvenli Çıkış Yap' butonunu kullanması Zorunludur...!!!
+                </div>
+            </div>
+            
+            <!-- SAĞ ÜST KISIM (Tarih, Senin Resmin ve Avatar) -->
+            <div class="topbar-right" style="display: flex; align-items: center; gap: 1rem;">
+                <span class="text-muted" style="font-size: 0.9rem;">@DateTime.Now.ToString("dd MMMM yyyy")</span>
+                
+                <!-- SADECE SENİN İNDİRDİĞİN FOTOĞRAF -->
+                <a href="/logout" class="custom-image-btn">
+                    <img src="/images/logout3.png" alt="Güvenli Çıkış Yap" class="logout-full-image" />
+                </a>
+
+                <div class="avatar">A</div>
+            </div>
+        </div>
+        
+        <div class="admin-content">
+            @Body
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Logo Tasarımı */
+    .take-net-logo {
+        display: inline-flex;
+        font-weight: 900;
+        font-family: 'Arial', sans-serif;
+        font-size: 1.2rem;
+        letter-spacing: 0.5px;
+    }
+    .take-net-logo .take {
+        background-color: #000000;
+        color: #ffffff;
+        padding: 4px 10px;
+        border-radius: 4px 0 0 4px;
+    }
+    .take-net-logo .net {
+        background-color: #facc15;
+        color: #0f172a;
+        padding: 4px 10px;
+        border-radius: 0 4px 4px 0;
+    }
+
+    /* Çıkış Butonu */
+    .custom-image-btn {
+        display: inline-flex;
+        align-items: center;
+        background: transparent !important;
+        border: none;
+        padding: 0;
+        margin: 0;
+    }
+    .logout-full-image {
+        height: 80px; 
+        width: auto;
+        object-fit: contain;
+        mix-blend-mode: multiply;
+        transition: transform 0.2s ease;
+    }
+
+/* --- KAYAN YAZI ALANI (TİCKER) CSS --- */
+    .ticker-container {
+        flex-grow: 1; 
+        margin: 0 30px; 
+        overflow: hidden; 
+        white-space: nowrap; 
+        height: 30px;
+        
+        /* Doğal merkezleme (Bulanıklığı önleyen asıl hamle) */
+        display: flex;
+        align-items: center;
+        justify-content: center; 
+    }
+
+    .ticker-text {
+        color: #d90429;
+        font-family: inherit;
+        font-size: 1.0rem;
+        font-weight: 600;
+        
+        transform: translateZ(0);
+        will-change: transform;
+        
+        animation: ticker-snap 35s linear infinite; 
+    }
+
+    /* Küsüratlı hesaplamaları bitiren yeni animasyon */
+    @@keyframes ticker-snap {
+        0% { 
+            transform: translateX(50vw); /* Ekranın sağından girer */
+        }
+        33% { 
+            transform: translateX(0); /* Kendi doğal merkezine sıfır sapmayla oturur (Bulanıklık biter) */
+        }
+        66% { 
+            transform: translateX(0); /* Sabit ve keskin şekilde bekler */
+        }
+        100% { 
+            transform: translateX(-50vw); /* Ekranın solundan çıkar */
+        }
+    }
+    }
+</style>
+
+@code {
+    [CascadingParameter] public string PageTitle { get; set; } = "Dashboard";
+}

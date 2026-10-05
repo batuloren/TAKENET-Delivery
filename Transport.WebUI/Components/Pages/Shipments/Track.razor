@@ -1,0 +1,337 @@
+﻿@page "/kargo-takip/{TrackingNumber}"
+
+@using Transport.Shared.Models.Shipments
+
+@rendermode InteractiveServer
+
+@inject ShipmentsService ShipmentsService
+@inject NavigationManager Navigation
+
+
+<PageTitle>Kargo Takip - @TrackingNumber</PageTitle>
+
+
+<div class="tracking-page">
+
+    <div class="tracking-container">
+
+        <h1>Kargo Takip</h1>
+
+
+        <div class="search-box">
+
+            <input type="text"
+                   placeholder="Takip numarası girin"
+                   @bind="searchInput" />
+
+            <button @onclick="SearchAgain">
+                Sorgula
+            </button>
+
+        </div>
+
+
+        @if (isLoading)
+        {
+            <div class="message">
+
+                <p>Kargo bilgileri getiriliyor...</p>
+
+            </div>
+        }
+
+
+        else if (Shipment == null)
+        {
+            <div class="message">
+
+                <h2>Kargo Bulunamadı</h2>
+
+                <p>
+                    <strong>@TrackingNumber</strong>
+                    numaralı kargoya ait kayıt bulunamadı.
+                </p>
+
+                <a href="/">
+                    Anasayfaya Dön
+                </a>
+
+            </div>
+        }
+
+
+        else
+        {
+            <div class="shipment-card">
+
+                <h2>Kargo Bilgileri</h2>
+
+
+                <div class="info">
+
+                    <strong>Takip Numarası</strong>
+
+                    <span>@TrackingNumber</span>
+
+                </div>
+
+
+                <div class="info">
+
+                    <strong>Durum</strong>
+
+                    <span>@Shipment.statusDurum</span>
+
+                </div>
+
+
+                <div class="info">
+
+                    <strong>Gönderi Tarihi</strong>
+
+                    <span>
+                        @(Shipment.shipmentDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")
+                    </span>
+
+                </div>
+
+
+                <div class="info">
+
+                    <strong>Çıkış Adresi</strong>
+
+                    <span>
+                        @(string.IsNullOrEmpty(Shipment.loadAddress)
+                            ? "Belirtilmemiş"
+                            : Shipment.loadAddress)
+                    </span>
+
+                </div>
+
+
+                <div class="info">
+
+                    <strong>Teslimat Adresi</strong>
+
+                    <span>
+                        @(string.IsNullOrEmpty(Shipment.deliveryAddress)
+                            ? "Belirtilmemiş"
+                            : Shipment.deliveryAddress)
+                    </span>
+
+                </div>
+
+
+                <div class="info">
+
+                    <strong>Sürücü</strong>
+
+                    <span>
+                        @(string.IsNullOrEmpty(Shipment.driverFullName)
+                            ? "Atanmadı"
+                            : Shipment.driverFullName)
+                    </span>
+
+                </div>
+
+
+                <div class="info">
+
+                    <strong>Ağırlık</strong>
+
+                    <span>
+                        @(Shipment.agirlik?.ToString("N2") ?? "0") kg
+                    </span>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .tracking-page {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        padding: 40px 20px;
+        background: #f5f7fa;
+    }
+
+
+    .tracking-container {
+        width: 100%;
+        max-width: 800px;
+    }
+
+
+    h1 {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+
+    .search-box {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 30px;
+    }
+
+
+        .search-box input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+
+        .search-box button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #1f2937;
+            color: white;
+            cursor: pointer;
+        }
+
+
+            .search-box button:hover {
+                background: #374151;
+            }
+
+
+    .message {
+        background: white;
+        padding: 40px;
+        text-align: center;
+        border-radius: 8px;
+    }
+
+
+        .message a {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 18px;
+            background: #1f2937;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+
+    .shipment-card {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+    }
+
+
+        .shipment-card h2 {
+            margin-bottom: 25px;
+        }
+
+
+    .info {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+
+        .info strong {
+            color: #555;
+        }
+
+
+        .info span {
+            text-align: right;
+        }
+
+
+    @@media (max-width: 600px) {
+
+        .search-box {
+            flex-direction: column;
+        }
+
+
+        .info {
+            flex-direction: column;
+            gap: 5px;
+        }
+
+
+            .info span {
+                text-align: left;
+            }
+    }
+
+</style>
+
+
+@code {
+
+    [Parameter]
+    public string TrackingNumber { get; set; } = string.Empty;
+
+
+    private string searchInput = string.Empty;
+
+    private bool isLoading = true;
+
+
+    private GetShipmentsByTrackIdResponse? Shipment;
+
+
+    protected override async Task OnParametersSetAsync()
+    {
+        searchInput = TrackingNumber;
+
+        await LoadCargoDataAsync();
+    }
+
+
+    private async Task LoadCargoDataAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            var request = new GetShipmentsByTrackIdRequest
+            {
+                trackId = TrackingNumber
+            };
+
+            Shipment = await ShipmentsService.GetByTrackIdAsync(request);
+        }
+        catch
+        {
+            Shipment = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+
+    private void SearchAgain()
+    {
+        if (!string.IsNullOrWhiteSpace(searchInput))
+        {
+            Navigation.NavigateTo(
+                $"/kargo-takip/{searchInput}"
+            );
+        }
+    }
+
+}

@@ -1,0 +1,519 @@
+﻿@page "/admin/vehicles"
+@using Transport.Shared.Models.Vehicles
+@rendermode InteractiveServer
+@layout AdminLayout
+
+@inject VehiclesService VehiclesService
+
+<div class="page-header">
+    <div>
+        <h1>Araçlar</h1>
+        <p>Araç yönetimi</p>
+    </div>
+</div>
+
+<div class="tab-bar">
+
+    <button class="tab-btn @(activeTab == "all" ? "active" : "")"
+            @onclick='() => SetTab("all")'>
+        Tüm Araçlar
+    </button>
+
+    <button class="tab-btn @(activeTab == "id" ? "active" : "")"
+            @onclick='() => SetTab("id")'>
+        ID
+    </button>
+
+    <button class="tab-btn @(activeTab == "plate" ? "active" : "")"
+            @onclick='() => SetTab("plate")'>
+        Plaka
+    </button>
+
+    <button class="tab-btn @(activeTab == "model" ? "active" : "")"
+            @onclick='() => SetTab("model")'>
+        Model
+    </button>
+</div>
+
+@if (activeTab == "all")
+{
+    <button type="button" @onclick="OpenAddForm" class="tab-btn"> + Yeni Araç Ekle</button>
+
+    @if (showAddForm)
+    {
+        <div class="search-panel">
+
+            <div class="search-panel-row">
+
+                <div class="search-box">
+                    <label>Plaka</label>
+                    <input type="text" @bind="createDTO.PlakaNumara" />
+                </div>
+
+                <div class="search-box">
+                    <label>Model</label>
+                    <input type="text" @bind="createDTO.AracModel" />
+                </div>
+
+                <div class="search-box">
+                    <label>Kapasite(KG)</label>
+                    <input type="number" @bind="createDTO.AracKapasite" />
+                </div>
+
+                <div class="search-box">
+                    <label>Boyut(Şasi)</label>
+                    <input type="text" @bind="createDTO.AracBoyut" />
+                </div>
+
+                <div class="search-box">
+                    <label>Durum</label>
+                    <select @bind="createDTO.AktifMi">
+                        <option value="true">Aktif</option>
+                        <option value="false">Pasif</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="search-panel-row">
+
+                <button type="button"
+                        class="btn-primary"
+                        @onclick="SubmitAdd">
+                    Kaydet
+                </button>
+
+                <button type="button"
+                        class="btn-primary"
+                        @onclick="CancelAdd">
+                    İptal
+                </button>
+
+            </div>
+
+        </div>
+    }
+    @if (isLoading)
+    {
+        <div class="table-loading">Yükleniyor...</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Plaka</th>
+                        <th>Model</th>
+                        <th>Kapasite</th>
+                        <th>Boyut</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in allVehicles)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.PlakaNumara</td>
+                            <td>@item.AracModel</td>
+                            <td>@item.AracKapasite</td>
+                            <td>@item.AracBoyut</td>
+                            <td>
+                                @if (item.AktifMi == true)
+                                {
+                                    <span class="badge badge-green">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-red">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <button class="action-btn edit"
+                                            title="Düzenle"
+                                            @onclick="() => OpenEdit(item)">
+                                        <i class="ti ti-edit"></i>
+                                        Düzenle
+                                    </button>
+
+                                    <button class="action-btn delete"
+                                            title="Sil"
+                                            @onclick="() => confirmDeleteId = item.Id">
+                                        <i class="ti ti-trash"></i>
+                                        Sil
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        @if (confirmDeleteId == item.Id)
+                        {
+                            <tr>
+                                <td colspan="7">
+                                    <div class="inline-edit">
+
+                                        <span>
+                                            Bu aracı silmek istediğinize emin misiniz?
+                                        </span>
+
+                                        <div class="inline-edit-actions">
+
+                                            <button class="btn-secondary"
+                                                    @onclick="CancelDelete">
+                                                İptal
+                                            </button>
+
+                                            <button class="action-btn delete"
+                                                    @onclick="() => SubmitDelete(item.Id)">
+                                                <i class="ti ti-trash"></i>
+                                                Sil
+                                            </button>
+
+                                        </div>
+
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (editingId == item.Id)
+                        {
+                            <tr>
+                                <td colspan="7">
+                                    <div class="inline-edit">
+                                    <input @bind="editDto.PlakaNumara"/>
+                                    <input @bind="editDto.AracModel" />
+                                    <input @bind="editDto.AracKapasite" />
+                                    <input @bind="editDto.AracBoyut" />
+                                        <label>
+                                            <input type="checkbox" @bind="editDto.AktifMi" />
+                                            Aktif
+                                        </label>
+                                        <div class="inline-edit-actions">
+                                            <button class="btn-secondary"
+                                                    @onclick="CancelEdit">
+                                                İptal
+                                            </button>
+
+                                            <button class="btn-primary"
+                                                    @onclick="SubmitEdit"
+                                                    disabled="@editLoading">
+                                                @if (editLoading)
+                                                {
+                                                    <i class="ti ti-loader"></i>
+                                                }
+                                                Kaydet
+                                            </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@if (activeTab == "id")
+{
+    <div class="search-panel">
+
+        <div class="search-panel-row">
+            <div class="search-box">
+            <input placeholder="ID giriniz" @bind="query" />
+            </div>
+            <button class="btn-primary" @onclick="SearchById" disabled="@loading">
+                Ara
+            </button>
+        </div>
+
+        @if (idResult != null)
+        {
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <td>@idResult.PlakaNumara</td>
+                        <td>@idResult.AracModel</td>
+                        <td>@idResult.AracKapasite</td>
+                        <td>@idResult.AracBoyut</td>
+                    </tr>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@if (activeTab == "plate")
+{
+    <div class="search-panel">
+
+        <div class="search-panel-row">
+            <div class="search-box">
+            <input placeholder="Plaka giriniz" @bind="query" />
+            </div>
+            <button class="btn-primary" @onclick="SearchByPlate" disabled="@loading">
+                Ara
+            </button>
+        </div>
+
+        @if (plateResult != null)
+        {
+            <div class="table-wrap">
+                <table>
+                    <tr>
+                        <td>@plateResult.AracModel</td>
+                        <td>@plateResult.AracKapasite</td>
+                        <td>@plateResult.AracBoyut</td>
+                        <td>@plateResult.AktifMi</td>
+                    </tr>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@if (activeTab == "model")
+{
+    <div class="search-panel">
+
+        <div class="search-panel-row">
+            <div class="search-box">
+            <input placeholder="Model giriniz" @bind="query" />
+            </div>
+            <button class="btn-primary" @onclick="SearchByModel" disabled="@loading">
+                Ara
+            </button>
+        </div>
+
+        @if (modelResults?.Any() == true)
+        {
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Plaka</th>
+                            <th>Kapasite</th>
+                            <th>Boyut</th>
+                            <th>Durum</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in modelResults)
+                        {
+                            <tr>
+                                <td>@item.PlakaNumara</td>
+                                <td>@item.AracKapasite</td>
+                                <td>@item.AracBoyut</td>
+                                <td>@item.AktifMi</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    private string activeTab = "all";
+
+    private bool isLoading = true;
+    private bool loading = false;
+
+    private string query = "";
+
+    private List<VehiclesListItem> allVehicles = new();
+
+    private GetVehiclesByIdResponse? idResult;
+    private GetVehiclesByPlateNumberResponse? plateResult;
+    private List<GetVehiclesByCarModelResponse>? modelResults;
+
+    // ---EKLE---
+
+    private VehiclesCreateDTO createDTO = new();
+    private bool showAddForm = false;
+
+    // ── DÜZENLEME ──
+    private Guid? editingId = null;
+    private VehiclesUpdateDTO editDto = null!;
+    private bool editLoading;
+    private string? editError;
+
+    // ── SİLME ──
+    private Guid? confirmDeleteId = null;
+    private bool deleteLoading;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var res = await VehiclesService.GetAllAsync();
+
+        if (res.IsSuccess && res.data != null)
+            allVehicles = res.data.ToList();
+
+        isLoading = false;
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+        query = "";
+        idResult = null;
+        plateResult = null;
+        modelResults = null;
+    }
+
+    //-------------------------------------------------
+    //             EKLEME
+    //-------------------------------------------------
+
+    private void OpenAddForm()
+    {
+        showAddForm = true;
+
+    }
+
+    private async Task SubmitAdd()
+    {
+        var newVehicle = new VehiclesCreateDTO();
+
+        newVehicle.PlakaNumara = createDTO.PlakaNumara;
+        newVehicle.AracModel = createDTO.AracModel;
+        newVehicle.AracKapasite = createDTO.AracKapasite;
+        newVehicle.AktifMi = createDTO.AktifMi;
+        newVehicle.AracBoyut = createDTO.AracBoyut;
+
+        await VehiclesService.Add(newVehicle);
+
+        var res = await VehiclesService.GetAllAsync();
+
+        if (res.IsSuccess && res.data != null)
+        {
+            allVehicles = res.data.ToList();
+        }
+
+        showAddForm = false;
+    }
+
+    private void CancelAdd()
+    {
+        showAddForm = false;
+    }
+
+    // ────────────────────────────────────────────
+    //  DÜZENLEME
+    // ────────────────────────────────────────────
+
+    private void OpenEdit(VehiclesListItem item)
+    {
+        editingId = item.Id;
+        editDto   = new VehiclesUpdateDTO
+        {
+            Id      = item.Id,
+            PlakaNumara = item.PlakaNumara,
+            AracModel = item.AracModel,
+            AracBoyut = item.AracBoyut,
+            AracKapasite = item.AracKapasite,
+            AktifMi = item.AktifMi,
+        };
+        editError = null;
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        editDto   = null!;
+        editError = null;
+    }
+
+    private async Task SubmitEdit()
+    {
+        if (editDto == null) return;
+
+        editLoading = true;
+        editError   = null;
+
+        try
+        {
+            await VehiclesService.UpdateAsync(editDto);
+
+            // ListeyiVehicles
+            var res = await VehiclesService.GetAllAsync();
+            allVehicles = res.data?.ToList() ?? new List<VehiclesListItem>();
+
+            CancelEdit();
+        }
+        catch (Exception ex)
+        {
+            editError = ex.Message;
+        }
+        finally
+        {
+            editLoading = false;
+        }
+    }
+
+    // ────────────────────────────────────────────
+    //  SİLME
+    // ────────────────────────────────────────────
+
+    private void CancelDelete() => confirmDeleteId = null;
+
+    private async Task SubmitDelete(Guid deleteId)
+    {
+        deleteLoading = true;
+
+       await VehiclesService.DeleteAsync(deleteId);
+        
+        allVehicles = allVehicles
+            .Where(x => x.Id != deleteId)
+            .ToList();
+    }
+
+
+    private async Task SearchById()
+    {
+        loading = true;
+        idResult = null;
+
+        try
+        {
+            if (Guid.TryParse(query, out var id))
+                idResult = await VehiclesService.GetByIdAsync(new GetVehiclesByIdRequest { Id = id });
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SearchByPlate()
+    {
+        loading = true;
+
+        plateResult = await VehiclesService.GetByPlateNumber(
+            new GetVehiclesByPlateNumberRequest { PlakaNumara = query }
+        );
+
+        loading = false;
+    }
+
+    private async Task SearchByModel()
+    {
+        loading = true;
+
+        modelResults = await VehiclesService.GetByCarModel(
+            new GetVehiclesByCarModelRequest { AracModel = query }
+        );
+
+        loading = false;
+    }
+}

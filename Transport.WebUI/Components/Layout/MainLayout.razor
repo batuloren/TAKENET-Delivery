@@ -1,0 +1,76 @@
+﻿@inherits LayoutComponentBase
+
+<div class="d-flex flex-column min-vh-100">
+    <!-- Navbar: Beyaz, ince ve özel butonlu -->
+    <nav class="navbar navbar-expand-lg bg-white shadow-sm py-1">
+        <div class="container">
+            <!-- TAKE NET Logo (CSS ile oluşturuldu) -->
+            <a class="navbar-brand text-decoration-none" href="/">
+                <div class="take-net-logo">
+                    <span class="take">TAKE</span><span class="net">NET</span>
+                </div>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto fw-medium">
+                    <li class="nav-item">
+                        <a class="nav-link custom-nav-link" href="/">Anasayfa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link custom-nav-link" href="/kargo-olustur">Kargo Gönder</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Ana İçerik -->
+    <main class="flex-grow-1 p-0 m-0">
+        @Body
+    </main>
+
+    <!-- Footer: Tamamen Siyah, Sağ Alta Dayalı -->
+    <footer class="bg-black text-white py-3 mt-auto">
+        <div class="container text-end">
+            <p class="mb-0 text-white-50 small">&copy; @DateTime.Now.Year TAKE NET Lojistik A.Ş. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+</div>
+
+<style>
+    /* Logo Tasarımı */
+    .take-net-logo {
+        display: inline-flex;
+        font-weight: 900;
+        font-family: 'Arial', sans-serif;
+        font-size: 1.4rem;
+        letter-spacing: 0.5px;
+    }
+    .take-net-logo .take {
+        background-color: #000000;
+        color: #ffffff;
+        padding: 4px 10px;
+    }
+    .take-net-logo .net {
+        background-color: #facc15; /* Sarı */
+        color: #0f172a; /* Lacivert */
+        padding: 4px 10px;
+    }
+
+    /* Navbar Link Hover Efekti */
+    .custom-nav-link {
+        color: #1e293b !important;
+        transition: all 0.3s ease;
+        padding: 8px 16px !important;
+        border-radius: 4px;
+        margin-left: 5px;
+    }
+    .custom-nav-link:hover {
+        background-color: rgba(0, 0, 0, 0.75);
+        color: #ffffff !important;
+    }
+</style>

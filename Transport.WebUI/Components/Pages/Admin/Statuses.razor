@@ -1,0 +1,146 @@
+﻿@page "/admin/statuses"
+@using Transport.Shared.Models.Statuses
+@rendermode InteractiveServer
+@layout AdminLayout
+
+@inject StatusesService StatusesService
+
+<div class="page-header">
+    <div>
+        <h1>Durumlar</h1>
+        <p>Status yönetimi</p>
+    </div>
+</div>
+
+<div class="tab-bar">
+
+    <button class="tab-btn @(activeTab == "all" ? "active" : "")"
+            @onclick='() => SetTab("all")'>
+        Tüm Statuslar
+    </button>
+
+    <button class="tab-btn @(activeTab == "code" ? "active" : "")"
+            @onclick='() => SetTab("code")'>
+        Status Code
+    </button>
+
+</div>
+
+@if (activeTab == "all")
+{
+    @if (isLoading)
+    {
+        <div class="table-loading">Yükleniyor...</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Status Code</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in allStatuses)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.StatusCode</td>
+                            <td>@item.Durum</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+@if (activeTab == "code")
+{
+    <div class="search-panel">
+
+        <div class="search-panel-row">
+            <div class="search-box">
+            <input placeholder="Status Code" @bind="query" />
+            </div>
+            <button class="btn-primary" @onclick="SearchByCode" disabled="@loading">
+                Ara
+            </button>
+
+        </div>
+
+        @if (codeResults?.Any() == true)
+        {
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Durum</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in codeResults)
+                        {
+                            <tr>
+                                <td>@item.durum</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+}
+
+@code {
+
+    private string activeTab = "all";
+
+    private bool isLoading = true;
+    private bool loading = false;
+
+    private string query = "";
+
+    private List<StatusesListItem> allStatuses = new();
+    private List<GetStatusesByStatusCodeResponse>? codeResults;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var res = await StatusesService.GetAll();
+
+        if (res.IsSuccess && res.data != null)
+            allStatuses = res.data.ToList();
+
+        isLoading = false;
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+        query = "";
+        codeResults = null;
+    }
+
+    private async Task SearchByCode()
+    {
+        loading = true;
+
+        if (int.TryParse(query, out var code))
+        {
+            codeResults = await StatusesService.GetByStatusCode(
+                new GetStatusesByStatusCodeRequest { statusCode = code }
+            );
+        }
+        else
+        {
+            codeResults = new List<GetStatusesByStatusCodeResponse>();
+        }
+
+        loading = false;
+    }
+}

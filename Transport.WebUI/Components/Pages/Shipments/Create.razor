@@ -1,0 +1,361 @@
+﻿@page "/kargo-olustur"
+
+@using Transport.Shared.DTOs.CustomersDTOs
+@using Transport.Shared.DTOs.ShipmentsDTOs
+@using Transport.WebUI.Services
+
+@rendermode InteractiveServer
+
+@inject CustomersService CustomersService
+@inject ShipmentsService ShipmentsService
+@inject IEmailService EmailService
+
+<PageTitle>Kargo Oluştur</PageTitle>
+
+
+<div class="create-page">
+
+    <div class="create-container">
+
+        <h1>Yeni Kargo Oluştur</h1>
+
+        <p class="description">
+            Kargo oluşturmak için bilgilerinizi girin.
+        </p>
+
+
+        @if (!customerCreated)
+        {
+            <div class="step">
+
+                <h2>1. Müşteri Bilgileri</h2>
+
+                <div class="form-group">
+                    <label>Ad</label>
+
+                    <input @bind="customer.Ad"
+                           placeholder="Adınız" />
+                </div>
+
+
+                <div class="form-group">
+                    <label>Soyad</label>
+
+                    <input @bind="customer.Soyad"
+                           placeholder="Soyadınız" />
+                </div>
+
+
+                <div class="form-group">
+                    <label>Telefon</label>
+
+                    <input @bind="customer.Telefon"
+                           placeholder="05XX XXX XX XX" />
+                </div>
+
+
+                <div class="form-group">
+                    <label>E-posta</label>
+
+                    <input type="email"
+                           @bind="customer.Email"
+                           placeholder="ornek@mail.com" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <p class="error">
+                        @ErrorMessage
+                    </p>
+                }
+
+                <button @onclick="CreateCustomer">
+                    Kargo Bilgilerine Geç
+                </button>
+
+            </div>
+        }
+
+
+        @if (customerCreated && !shipmentCreated)
+        {
+            <div class="step">
+
+                <h2>2. Kargo Bilgileri</h2>
+
+                <p class="success">
+                    ✓ Müşteri bilgileri kaydedildi.
+                </p>
+
+
+                <div class="form-group">
+                    <label>Çıkış Adresi</label>
+
+                    <input @bind="shipment.LoadAddress"
+                           placeholder="Çıkış adresi" />
+                </div>
+
+
+                <div class="form-group">
+                    <label>Varış Adresi</label>
+
+                    <input @bind="shipment.DeliveryAddress"
+                           placeholder="Teslimat adresi" />
+                </div>
+
+
+                <div class="form-group">
+                    <label>Açıklama</label>
+
+                    <textarea @bind="shipment.Description"
+                              placeholder="Kargo hakkında bir not yazabilirsiniz.">
+                    </textarea>
+                </div>
+
+
+                <button @onclick="CreateShipment">
+                    Kargoyu Oluştur
+                </button>
+
+            </div>
+        }
+
+
+        @if (shipmentCreated)
+        {
+            <div class="success-page">
+
+                <h2>Kargo Başarıyla Oluşturuldu!</h2>
+
+                <p>
+                    Kargonuz sisteme kaydedildi.
+                </p>
+
+
+                <div class="tracking-number">
+
+                    <span>Takip Numaranız</span>
+
+                    <strong>@generatedTrackId</strong>
+
+                </div>
+
+
+                <a href="/kargo-takip/@generatedTrackId">
+                    Kargoyu Takip Et
+                </a>
+
+
+                <a href="/">
+                    Anasayfaya Dön
+                </a>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .create-page {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: #f5f5f5;
+        padding: 30px;
+    }
+
+
+    .create-container {
+        width: 100%;
+        max-width: 600px;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+    }
+
+
+    h1 {
+        margin-bottom: 10px;
+    }
+
+
+    .description {
+        color: #666;
+        margin-bottom: 30px;
+    }
+
+
+    .step h2 {
+        margin-bottom: 20px;
+    }
+
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+
+    input,
+    textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 15px;
+    }
+
+
+    textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+
+    button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        background: #1f2937;
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+
+        button:hover {
+            background: #374151;
+        }
+
+
+    .success {
+        color: green;
+        margin-bottom: 20px;
+    }
+
+
+    .success-page {
+        text-align: center;
+    }
+
+
+    .tracking-number {
+        margin: 25px 0;
+        padding: 20px;
+        background: #f5f5f5;
+        border-radius: 5px;
+    }
+
+
+        .tracking-number span {
+            display: block;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+
+        .tracking-number strong {
+            font-size: 22px;
+        }
+
+
+    .success-page a {
+        display: inline-block;
+        margin: 5px;
+        padding: 10px 18px;
+        background: #1f2937;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+</style>
+
+
+@code {
+
+    CustomersCreateDTO customer = new();
+
+    ShipmentsCreateDTO shipment = new();
+
+
+    bool customerCreated = false;
+
+    bool shipmentCreated = false;
+
+    private string ErrorMessage = string.Empty;
+
+    string generatedTrackId = string.Empty;
+
+
+    Guid customerId;
+
+
+    async Task CreateCustomer()
+    {
+        ErrorMessage = string.Empty;
+        try
+        {
+            customerId = await CustomersService.AddAsync(customer);
+
+            customerCreated = true;
+        }
+        catch(Exception ex)
+        {
+            ErrorMessage = ex.Message;
+        }
+
+    }
+
+
+    async Task CreateShipment()
+    {
+        try
+        {
+            var newShipment = new ShipmentsCreateDTO
+            {
+                LoadAddress = shipment.LoadAddress,
+                DeliveryAddress = shipment.DeliveryAddress,
+                CustomerId = customerId,
+                Description = shipment.Description
+            };
+
+            generatedTrackId = await ShipmentsService.AddAsync(newShipment);
+            shipmentCreated = true;
+
+            if (!string.IsNullOrEmpty(customer.Email))
+            {
+                string subject = "Kargonuz Başarıyla Oluşturuldu - Takip Numaranız";
+                string body = $@"
+                    <h3>Merhaba {customer.Ad} {customer.Soyad},</h3>
+                    <p>Kargonuz sistemimize başarıyla kaydedilmiştir.</p>
+                    <p><strong>Çıkış Adresi:</strong> {newShipment.LoadAddress}</p>
+                    <p><strong>Varış Adresi:</strong> {newShipment.DeliveryAddress}</p>
+                    <br/>
+                    <p>Kargonuzu aşağıdaki takip numarası ile takip edebilirsiniz:</p>
+                    <h2 style='color: #1f2937;'>{generatedTrackId}</h2>
+                    <br/>
+                    <p>Bizi tercih ettiğiniz için teşekkür ederiz.</p>";
+
+                await EmailService.SendEmailAsync(customer.Email, subject, body);
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = "Kargo oluşturulurken bir hata oluştu: " + ex.Message;
+        }
+    }
+
+}

@@ -1,0 +1,32 @@
+﻿.admin-layout {
+    display: flex;
+    height: 100vh;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 220px;
+    background-color: #1f2937;
+    color: white;
+    padding: 20px;
+}
+
+    .sidebar a {
+        display: block;
+        color: white;
+        text-decoration: none;
+        margin: 10px 0;
+        cursor: pointer;
+    }
+
+        .sidebar a:hover {
+            color: #60a5fa;
+        }
+
+/* MAIN CONTENT */
+.main-content {
+    flex: 1;
+    padding: 20px;
+    background-color: #f3f4f6;
+    overflow-y: auto;
+}

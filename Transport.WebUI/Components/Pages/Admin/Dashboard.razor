@@ -1,0 +1,121 @@
+﻿@page "/admin"
+@layout AdminLayout
+@inject ShipmentsService ShipmentsService
+@inject CustomersService CustomersService
+@inject DriversService DriversService
+@inject VehiclesService VehiclesService
+
+<div class="page-header">
+    <h1>Genel Bakış</h1>
+    <p>Bugünkü operasyon özeti</p>
+</div>
+
+@if (isLoading)
+{
+    <div class="table-loading"><i class="ti ti-loader"></i> Yükleniyor...</div>
+}
+else
+{
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="ti ti-package stat-icon"></i>
+            <div class="stat-label">Toplam Kargo</div>
+            <div class="stat-value">@totalShipments</div>
+        </div>
+        <div class="stat-card">
+            <i class="ti ti-users stat-icon"></i>
+            <div class="stat-label">Toplam Müşteri</div>
+            <div class="stat-value">@totalCustomers</div>
+        </div>
+        <div class="stat-card">
+            <i class="ti ti-steering-wheel stat-icon"></i>
+            <div class="stat-label">Toplam Sürücü</div>
+            <div class="stat-value">@totalDrivers</div>
+        </div>
+        <div class="stat-card">
+            <i class="ti ti-truck stat-icon"></i>
+            <div class="stat-label">Araç Filosu</div>
+            <div class="stat-value">@totalVehicles</div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="card">
+            <div class="card-title">Son Kargolar</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Takip No</th>
+                        <th>Müşteri</th>
+                        <th>Yükleme</th>
+                        <th>Teslimat</th>
+                        <th>Statü</th>
+                        <th>Tarih</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in recentShipments)
+                    {
+                        <tr>
+                            <td><span class="track-id">@item.trackId</span></td>
+                            <td>@item.CustomerFullName</td>
+                            <td>@item.LoadAddress</td>
+                            <td>@item.DeliveryAddress</td>
+                            <td><span class="badge @GetStatusBadge(item.StatusDurum)">@item.StatusDurum</span></td>
+                            <td>@item.ShipmentDate?.ToString("dd.MM.yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private int totalShipments;
+    private int totalCustomers;
+    private int totalDrivers;
+    private int totalVehicles;
+    private List<ShipmentsTableAdminDTO> recentShipments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            var shipments = await ShipmentsService.GetAllShipmentsAsync();
+            var vehicles = await VehiclesService.GetAllAsync();
+            var drivers = await DriversService.GetAllAsync();
+            var customers = await CustomersService.GetAllAsync();
+
+            totalShipments = shipments.Count;
+            recentShipments = shipments
+                .OrderByDescending(x => x.ShipmentDate)
+                .Take(5)
+                .ToList();
+
+            totalCustomers = customers.data?.Count ?? 0;
+            totalDrivers = drivers.data?.Count ?? 0;
+            totalVehicles = vehicles.data?.Count ?? 0;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("DASHBOARD FULL ERROR:");
+            Console.WriteLine(ex.ToString());
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetStatusBadge(string? status) => status switch
+    {
+        "Yolda" => "badge-amber",
+        "Hazırlanıyor" => "badge-blue",
+        "İptal" => "badge-red",
+        _ => "badge-gray"
+    };
+}

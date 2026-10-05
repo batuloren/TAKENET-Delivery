@@ -1,0 +1,249 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<PageTitle>TAKE NET - Kargo Takip</PageTitle>
+
+<div class="home">
+
+    <div class="hero">
+
+        <h1>Kargonuzu Bulalım</h1>
+
+        <p>
+            Kargonuzun durumunu öğrenmek için takip numaranızı girin.
+        </p>
+
+        <div class="tracking-box">
+
+            <input type="text"
+                   placeholder="Takip numaranızı girin"
+                   @bind="TrackingNumber" />
+
+            <button @onclick="Sorgula">
+                Sorgula
+            </button>
+
+        </div>
+
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <p class="error">
+                @ErrorMessage
+            </p>
+        }
+
+        <div class="create-shipment">
+            <p>Yeni bir kargo göndermek ister misiniz?</p>
+            
+            <a href="/kargo-olustur">
+                Kargo Gönder
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+
+    * {
+        box-sizing: border-box;
+    }
+
+    .home {
+        position: relative;
+        min-height: 100vh;
+        min-height: 100svh; /* mobil adres çubuğu kaymasını engeller */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        background-image: url("/images/truckbg.jpg");
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center center;
+    }
+
+        /* Görselin üstüne hafif karartma - yazıların her zaman okunur olması için */
+        .home::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(17, 24, 39, 0.25);
+        }
+
+    .hero {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 700px;
+        text-align: center;
+        padding: 40px;
+        background: rgba(61, 165, 92, 0.6);
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    }
+
+        .hero h1 {
+            font-size: 42px;
+            margin-bottom: 15px;
+            line-height: 1.2;
+            color: white;
+        }
+
+        .hero p {
+            color: white;
+            margin-bottom: 30px;
+        }
+
+    .tracking-box {
+        display: flex;
+        gap: 10px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+        .tracking-box input {
+            flex: 1;
+            min-width: 0; /* flex item taşmasını önler */
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .tracking-box button {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 6px;
+            background-color: #1f2937;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            white-space: nowrap;
+            transition: background-color 0.2s ease;
+        }
+
+            .tracking-box button:hover {
+                background-color: #374151;
+            }
+
+    .error {
+        color: #dc2626;
+        margin-top: 15px;
+    }
+
+    .create-shipment {
+        margin-top: 40px;
+    }
+
+        .create-shipment p {
+            margin-bottom: 12px;
+        }
+
+        .create-shipment a {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #e5e7eb;
+            color: #111827;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+            .create-shipment a:hover {
+                background-color: #d1d5db;
+            }
+
+    /* ============================
+           RESPONSIVE BREAKPOINT'LER
+           ============================ */
+
+    /* Tablet */
+    @@media (max-width: 900px) {
+        .home {
+            background-position: 65% center;
+        }
+
+        .hero {
+            max-width: 90%;
+            padding: 32px 24px;
+        }
+
+            .hero h1 {
+                font-size: 34px;
+            }
+    }
+
+    /* Mobil */
+    @@media (max-width: 600px) {
+        .home {
+            background-position: 75% center;
+            padding: 16px;
+        }
+
+        .hero {
+            padding: 24px 18px;
+            border-radius: 12px;
+        }
+
+            .hero h1 {
+                font-size: 26px;
+            }
+
+            .hero p {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+        /* Küçük ekranda input/buton alt alta gelsin */
+        .tracking-box {
+            flex-direction: column;
+        }
+
+            .tracking-box button {
+                width: 100%;
+                padding: 14px;
+            }
+
+            .tracking-box input {
+                width: 100%;
+            }
+
+        .create-shipment {
+            margin-top: 28px;
+        }
+    }
+
+    /* Çok küçük ekranlar */
+    @@media (max-width: 360px) {
+        .hero h1 {
+            font-size: 22px;
+        }
+    }
+
+</style>
+
+@code {
+
+    private string TrackingNumber { get; set; } = string.Empty;
+
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private void Sorgula()
+    {
+        if (string.IsNullOrWhiteSpace(TrackingNumber))
+        {
+            ErrorMessage = "Lütfen takip numaranızı girin.";
+            return;
+        }
+
+        ErrorMessage = string.Empty;
+
+        Navigation.NavigateTo(
+            $"/kargo-takip/{TrackingNumber.Trim()}"
+        );
+    }
+
+}

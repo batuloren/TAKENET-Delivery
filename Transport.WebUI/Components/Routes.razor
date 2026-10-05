@@ -1,0 +1,21 @@
+﻿@using Transport.WebUI.Components.Layout
+
+<Router AppAssembly="@typeof(Program).Assembly">
+    <Found Context="routeData">
+        
+        <!-- BÜTÜN KİLİTLER SİLİNDİ, ESKİ HALİNE DÖNDÜ -->
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    
+    <NotFound>
+        <PageTitle>Sayfa Bulunamadı - TAKE NET</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <div class="container text-center py-5 mt-5">
+                <h2 class="fw-bold mb-3 text-white">404 - Sayfa Bulunamadı</h2>
+                <a href="/" class="btn btn-outline-light px-4">Anasayfaya Dön</a>
+            </div>
+        </LayoutView>
+    </NotFound>
+</Router>

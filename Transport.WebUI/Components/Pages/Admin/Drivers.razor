@@ -1,0 +1,407 @@
+﻿@page "/admin/drivers"
+@rendermode InteractiveServer
+@using Transport.Shared.Models.Drivers
+@using Transport.Shared.DTOs.DriversDTOs
+@inject DriversService driversService
+@layout AdminLayout
+<div class="tab-bar"> <!-- Bu alan sorgulama başlıkları alanıdır. Sayfadaki tablonun üstündeki başlıkların olduğu kısımdır.-->
+    <button class="tab-btn @(activeTab == "all" ? "active" : "")" @onclick='() => SetTab("all")'> Tüm Araçlar </button>
+    <button class="tab-btn @(activeTab == "id" ? "active" : "")" @onclick='() => SetTab("id")'> ID </button>
+    <button class="tab-btn @(activeTab == "email" ? "active" : "")" @onclick='() => SetTab("email")'> E-Mail </button>
+    <button class="tab-btn @(activeTab == "fullName" ? "active" : "")" @onclick='() => SetTab("fullName")'> Ad Soyad </button>
+    <button class="tab-btn @(activeTab == "phone" ? "active" : "")" @onclick='() => SetTab("phone")'> Telefon </button>
+</div>
+     
+    @if(activeTab == "all")
+     {
+         <button @onclick="OpenAddForm">+ Yeni Sürücü Ekle</button>
+         @if(showAddForm){
+         <div class="search-panel">
+             <input @bind="newDriver.Ad" placeholder="Ad"/>
+             <input @bind="newDriver.Soyad" placeholder="Soyad"/>
+             <input type="number" @bind="newDriver.Telefon" placeholder="Telefon"/>
+             <input @bind="newDriver.Email" placeholder="Email"/>
+             <button @onclick="SubmitAdd">Kaydet</button>
+             <button @onclick="CancelAdd">İptal</button>
+         </div>
+         }
+    @if(isLoading == true){<div class="table-loading">Yükleniyor...</div>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>EMAIL</th>
+                        <th>AD SOYAD</th>
+                        <th>TELEFON</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach(var item in allDrivers)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.FullName</td>
+                            <td>@item.Email</td>
+                            <td>@item.Telefon</td>
+
+                            <td>
+                                <button @onclick="() => OpenEdit(item)">Düzenle</button>
+                                <button @onclick="() => confirmDeleteId = item.Id">Sil</button>
+                            </td>
+                        </tr>
+
+                        @if(confirmDeleteId == item.Id)
+                        {
+                            <tr>
+                                <td colspan="7">
+                                    <div class="inline-edit">
+                                        <span> Bu sürücüyü silmek istediğinizden emin misiniz? </span>
+                                        <div class="inline-edit-actions">
+                                            <button @onclick="CancelDelete"> İptal </button>
+                                            <button @onclick='() => SubmitDelete(item.Id)'> Sil </button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+
+                        @if(editingId == item.Id)
+                        {
+                            <tr>
+                                <td colspan="7">
+                                 <div class="inline-edit">
+                                     <input @bind="updatedDriver.Ad"/> 
+                                     <input @bind="updatedDriver.Soyad"/>
+                                     <input @bind="updatedDriver.Email" />
+                                     <input @bind="updatedDriver.Telefon" />
+                                     <input type="checkbox" @bind="updatedDriver.AktifMi"/> Aktif
+
+                                     <div class="inline-edit-actions">
+                                         <button @onclick="CancelEdit"> İptal </button>
+                                         <button @onclick="SubmitEdit" disabled="@editLoading">@if (editLoading) {<i class="ti ti-loader"> </i> } Kaydet </button>
+                                        </div>
+                                 </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+<!-- ID İLE ARAMA -->
+
+@if (activeTab == "id")
+{
+    <div class="search-panel">
+        <input placeholder="ID Giriniz" @bind="query" />
+        <button @onclick="SearchById" disabled="@loading">Ara</button>
+
+        @if(idResult != null)
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ad Soyad</th>
+                        <th>Email</th>
+                        <th>Telefon</th>
+                        <th>Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@idResult.Ad @idResult.Soyad</td>
+                        <td>@idResult.Email</td>
+                        <td>@idResult.Telefon</td>
+                        <td>@(idResult.AktifMi == true ? "Aktif" : "Pasif")</td>
+                    </tr>
+                </tbody>
+            </table>
+        }
+    </div>
+}
+
+<!-- EMAIL ILE ARAMA -->
+
+@if(activeTab == "email")
+{
+    <div class="search-panel">
+    <input placeholder="Email giriniz" @bind="query"/>
+    <button @onclick="SearchByEmail" disabled="@loading">Ara</button>
+
+    @if(emailResult != null)
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>Ad Soyad</th>
+                    <th>Telefon</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>@emailResult.Ad @emailResult.Soyad</td>
+                    <td>@emailResult.Telefon</td>
+                </tr>
+            </tbody>
+        </table>
+    }
+    </div>
+}
+<!-- AD SOYAD İLE ARAMA-->
+@if(activeTab == "fullName")
+{
+    <div class="search-panel">
+        <input placeholder="Ad Soyad giriniz" @bind="query"/>
+        <button @onclick="SearchByFullName" disabled="@loading">Ara</button>
+
+        @if(fullNameResults?.Any() == true)
+        {
+           
+           <table>
+               <thead>
+                   <tr>
+                       <th>Telefon</th>
+                       <th>Email</th>
+                   </tr>
+               </thead>
+               <tbody>
+                    @foreach (var item in fullNameResults)
+                    {
+                        <tr>
+                            <td>@item.Telefon</td>
+                            <td>@item.Email</td>
+                        </tr>
+                    }
+                </tbody>
+           </table>
+        }
+    </div>
+}
+<!-- TELEFON İLE ARAMA -->
+@if(activeTab == "phone")
+{
+    <div class="search-panel">
+        <input placeholder="Telefon numarası giriniz" @bind="query"/>
+        <button @onclick="SearchByPhone" disabled="@loading">Ara</button>
+
+        @if(phoneResult != null)
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ad Soyad</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>@phoneResult.Ad @phoneResult.Soyad</td>
+                    </tr>
+                </tbody>
+            </table>
+        }
+    </div>
+}
+
+@code {
+
+    private bool isLoading = true; //Sayfa başladığında yükleme için true yap.
+    private bool loading = false; //Yükleme sırasında aktif et butonu kitlesin.
+    private string activeTab = "all"; //Aktif hangi tab açık mesela id mi eposta mı hepsi mi gibi
+    private string query = ""; // Arama kutusuna yazılan metni tutuyor.
+
+
+    //<*_*> SÜRÜCÜ VERİLERİ <*_*>//
+
+    private List<DriversListItem> allDrivers = new(); //Ana tabda liste olarak hepsini göstericez. O yüzden liste olarak bütün driverleri çekiyoruz.
+
+    private GetDriversByIdResponse? idResult; // Id ile çekince gelen sonucu tutacak.
+
+    private GetDriversByEmailResponse? emailResult; //Eposta ile çekince gelen sonucu tutacak.
+
+    private List<GetDriversByFullNameResponse>? fullNameResults; // Fullname ile çekince gelen sonucu tutacak.
+
+    private GetDriversByPhoneResponse? phoneResult; //Telefon no ile çekince gelen sonucu tutacak.
+
+
+    //<*_-> YENİ SÜRÜCÜ OLUŞTURMA KOMPONENTLERİ <-_*> //
+
+    bool showAddForm; //Yeni sürücü eklemek için açılan Form açık mı diye kontrol? True dönerse form açılır False dönerse form kapanır. 
+    //Formu açıp kapatmak için true false kullanıcam çünkü Add butonuna bastığımda veya iptal dediğimde False dönerek ekrandaki formun kapatılması gerek.
+
+    private DriversCreateDTO newDriver = new(); //Yeni oluşturulacak sürücü için boş bir şablon oluşturdum.
+
+    //<*_-> SÜRÜCÜ DÜZENLEME KOMPONENTLERİ <-_*> //
+
+    private Guid? editingId = null; //Editleyeceğim sürücünün ID numarası yani Guid ?""Var mı bu ID?"" Daha sonrasında başta NULL gelmesi lazım çünkü ben belirticem...
+
+    private DriversUpdateDTO updatedDriver = null!; // Editleme formu için gerekli olan verileri bu DTO ile çekicem. NULL olamaz çünkü formun içinde doldurabileceğim alanların olması zorunlu!
+
+    private bool editLoading; //Edit işlemi bir iptal butonu ile sonlandırılırsa loading devreye girer TRUE ile ve o işlemi engeller.
+
+    //<*_-> SÜRÜCÜ SİLME KOMPONENTLERİ <-_*> //
+
+    private Guid? confirmDeleteId = null; //Burada hangi aracın silinmek üzere olduğu bilgisi getiriliyor.
+
+
+
+    //******************************* LIFECYLE METODUNA BAŞLANGIÇ. SAYFA VERİLERİ ÇEKME ALANI ***************************************//
+
+    protected override async Task OnInitializedAsync() //Sayfa yüklendiğinde arkaplanda hali hazırda bulunması gereken dataları çekicem.
+    {
+        var res = await driversService.GetAllAsync(); //Bütün driverları burada servisten çekiyorum.
+
+        if(res.IsSuccess && res.data !=null) //Eğer datayı başarıyla çektiyse ve çektiği data !=null yani NULL değil ise {}
+        {
+            allDrivers = res.data.ToList(); //Çekilen datayı liste haline getir ve allDrivers'e ata.
+        }
+
+        isLoading = false; //Yükleme bitti bu yüzden loading false olur. En başta "Yükleniyor" olacaktı data çekildikten sonra FALSE yaparak yüklemeyi bitirip datayı göstericem.
+
+    }
+
+    private void SetTab(string tab)
+    {
+        activeTab = tab;
+        query = "";
+        idResult = null;
+        emailResult = null;
+        fullNameResults = null;
+        phoneResult = null;
+    }
+
+    private void CancelDelete()
+    {
+        confirmDeleteId = null; //Onay Kutusunu Kapat.
+    }
+
+    private async Task SubmitDelete(Guid deleteId)
+    {
+        await driversService.DeleteAsync(deleteId); //İlgili item.Id ye sahip Driver silinir.
+        allDrivers = allDrivers.Where(x => x.Id != deleteId).ToList(); // Burada silinme olayından sonra tüm sürücüleri çekmek yerine sürücüler içinde bu ID ye sahip olmayanları getir.
+        confirmDeleteId = null; //Onay Kutusunu Kapat.
+    }
+
+    private void CancelEdit()
+    {
+        editingId = null;
+        updatedDriver = null!;
+    }
+
+    private void OpenEdit(DriversListItem item)
+    {
+        editingId = item.Id;
+
+        updatedDriver = new DriversUpdateDTO
+            {
+                Id = item.Id,
+                Ad = item.Ad,
+                Soyad = item.Soyad,
+                Email = item.Email,
+                Telefon = item.Telefon,
+                AktifMi = item.AktifMi
+            };
+    }
+
+    private async Task SubmitEdit()
+    {
+        if (updatedDriver == null) return;
+        editLoading = true;
+
+        try
+        {
+            await driversService.UpdateAsync(updatedDriver);
+
+            var res = await driversService.GetAllAsync();
+            allDrivers = res.data?.ToList() ?? new List<DriversListItem>();
+
+            CancelEdit();
+        }
+
+        catch(Exception ex){}
+        finally{editLoading = false;} 
+    }
+
+    private void OpenAddForm()
+    {
+        showAddForm = true;
+        newDriver = new DriversCreateDTO();
+    }
+
+    private async Task SubmitAdd()
+    {
+        await driversService.AddAsync(newDriver);
+
+        var res = await driversService.GetAllAsync();
+        allDrivers = res.data?.ToList() ?? new List<DriversListItem>();
+
+        showAddForm = false;
+        newDriver = new();
+    }
+
+    private void CancelAdd()
+    {
+        showAddForm = false;
+    }
+
+    private async Task SearchById()
+    {
+        loading = true;
+        idResult = null;
+
+        try
+        {
+            if (Guid.TryParse(query, out var id))
+                idResult = await driversService.GetByIdAsync(new GetDriversByIdRequest { Id = id });
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task SearchByEmail()
+    {
+        loading = true;
+        emailResult = null;
+
+        if(query != null)
+        {
+            emailResult = await driversService.GetByEmailAsync(new GetDriversByEmailRequest {Email = query});
+        }
+
+        loading = false;
+    }
+
+    private async Task SearchByPhone()
+    {
+        loading = true;
+        phoneResult = null;
+
+        if(query != null)
+        {
+            phoneResult = await driversService.GetByPhoneAsync(new GetDriversByPhoneRequest { Telefon = query });
+        }
+
+        loading = false;
+    }
+
+    private async Task SearchByFullName()
+    {
+        loading = true;
+        fullNameResults = null;
+
+        if(query != null)
+        {
+            fullNameResults = await driversService.GetByFullName(new GetDriversByFullNameRequest { FullName = query });
+        }
+
+        loading = false;
+    }
+}

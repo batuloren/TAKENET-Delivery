@@ -1,0 +1,15 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.log
+
+appsettings.Development.json
+appsettings.Production.json
+*.pfx
+*.p12
+
+.idea/
+.vscode/
+appsettings.json
